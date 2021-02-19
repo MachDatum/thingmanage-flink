@@ -35,6 +35,19 @@ public class App
 //        GenerateMaven();
         try{
             UpdatePOM();
+
+            InvocationRequest request = new DefaultInvocationRequest();
+            request.setGoals(Collections.singletonList("package"));
+            Invoker invoker = new DefaultInvoker();
+            invoker.setMavenHome(new File("C:\\Program Files\\Java\\apache-maven-3.6.3"));
+            invoker.setWorkingDirectory(new File(Directory + "\\flink-process"));
+            invoker.setOutputHandler(new InvocationOutputHandler() {
+                @Override
+                public void consumeLine(String s) throws IOException {
+                    System.out.println(s);
+                }
+            });
+            InvocationResult result = invoker.execute( request );
         }
         catch (Exception ex){
 
@@ -114,7 +127,7 @@ public class App
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource source = new DOMSource(document);
-            StreamResult file = new StreamResult(new File(Directory + "\\flink-process\\_pom2.xml"));
+            StreamResult file = new StreamResult(new File(Directory + "\\flink-process\\pom.xml"));
             transformer.transform(source, file);
         }catch (Exception ex){
             System.out.println(ex);
