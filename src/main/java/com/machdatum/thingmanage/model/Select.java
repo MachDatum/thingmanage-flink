@@ -1,4 +1,4 @@
-package com.machdatum.thingmanage;
+package com.machdatum.thingmanage.model;
 
 import java.util.List;
 

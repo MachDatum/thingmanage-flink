@@ -1,4 +1,4 @@
-package com.machdatum.thingmanage;
+package com.machdatum.thingmanage.model;
 
 public class TumblingWindow {
     public String Over;
