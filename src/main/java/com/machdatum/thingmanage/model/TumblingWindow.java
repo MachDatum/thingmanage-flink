@@ -3,6 +3,7 @@ package com.machdatum.thingmanage.model;
 import java.util.List;
 
 public class TumblingWindow {
+    public  String Name;
     public String Over;
     public String On;
     public String As;
