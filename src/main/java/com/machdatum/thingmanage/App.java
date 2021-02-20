@@ -3,7 +3,6 @@ package com.machdatum.thingmanage;
 import com.squareup.javapoet.ClassName;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import org.apache.flink.streaming.connectors.kafka.config.StartupMode;
 import org.apache.maven.shared.invoker.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -30,7 +29,7 @@ public class App
 
     public static void main( String[] args ) throws MavenInvocationException {
 //        GenerateMaven();
-        initialization ();
+        KafkaInitilization(); // Table and kafka configs as arguments
         try{
             UpdatePOM();
 
@@ -74,70 +73,24 @@ public class App
         return  document;
     }
 
-    private static void initialization(){
-        // Configuration
+    private static String KafkaInitilization(Table table, KafkaConfiguration kafkaConfiguration){
         Writer file = null;
         Configuration cfg = new Configuration();
 
         try {
-
-            // Set Directory for templates
-            cfg.setDirectoryForTemplateLoading(new File("templates"));
-
-            // load template
-            Template template = cfg.getTemplate("helloworld.ftl");
-
-            // data-model
+            cfg.setDirectoryForTemplateLoading(new File("templates")); //change absolute path
+            Template template = cfg.getTemplate("KafkaSourceConfigurationTemplate.ftl");
             Map<String, Object> input = new HashMap<String, Object>();
-            Table table = new Table();
-            KafkaConfiguration kafkaConfiguration = new KafkaConfiguration();
-            table.Name = "rawdata";
-
-            Column in_data =new Column();
-            in_data.setSource("Device");
-            in_data.setType("int");
-
-            Column in_data2 =new Column();
-            in_data2.setSource("TS");
-            in_data2.setType("TIMESTAMP (3)");
-
-            Column in_data3 =new Column();
-            in_data3.setSource("Cnt");
-            in_data3.setType("int");
-
-            List<Column> in =new ArrayList<Column>();
-            in.add(in_data);
-            in.add(in_data2);
-            in.add(in_data3);
-
-            table.Columns = in;
-
-            List topics = new ArrayList<String>();
-            topics.add("rawdata");
-            kafkaConfiguration.Topics =topics;
-
-            List servers = new ArrayList<String>();
-            servers.add("192.168.1.130:29092");
-            kafkaConfiguration.BootstrapServers=servers;
-            kafkaConfiguration.Startup = StartupMode.EARLIEST;
-            kafkaConfiguration.GroupId = "wqe12w12w";
 
             input.put("table",table);
             input.put("kafkaconfiguration",kafkaConfiguration);
 
-            // File output
-            file = new FileWriter(new File("output.txt"));
-            template.process(input, file);
-            file.flush();
-
-            // Also write output to console
             Writer out = new OutputStreamWriter(System.out);
             template.process(input, out);
             out.flush();
-
+            return out.toString();
         } catch (Exception e) {
             System.out.println(e.getMessage());
-
         } finally {
             if (file != null) {
                 try {
@@ -146,7 +99,9 @@ public class App
                 }
             }
         }
+        return null;
     }
+
     private  static  void GenerateMaven() throws MavenInvocationException {
         InvocationRequest request = new DefaultInvocationRequest();
         request.setGoals(Collections.singletonList("archetype:generate"));
