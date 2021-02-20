@@ -30,7 +30,7 @@ public class App
 
     public static void main( String[] args ) throws MavenInvocationException {
 //        GenerateMaven();
-        initialization ();
+        initialization (); // Table and kafka configs as arguments
         try{
             UpdatePOM();
 
@@ -74,7 +74,7 @@ public class App
         return  document;
     }
 
-    private static void initialization(){
+    private static void initialization(Table table,KafkaConfiguration kafkaConfiguration){
         // Configuration
         Writer file = null;
         Configuration cfg = new Configuration();
@@ -87,40 +87,10 @@ public class App
             // load template
             Template template = cfg.getTemplate("helloworld.ftl");
 
+
             // data-model
             Map<String, Object> input = new HashMap<String, Object>();
-            Table table = new Table();
-            KafkaConfiguration kafkaConfiguration = new KafkaConfiguration();
-            table.Name = "rawdata";
 
-            Column in_data =new Column();
-            in_data.setSource("Device");
-            in_data.setType("int");
-
-            Column in_data2 =new Column();
-            in_data2.setSource("TS");
-            in_data2.setType("TIMESTAMP (3)");
-
-            Column in_data3 =new Column();
-            in_data3.setSource("Cnt");
-            in_data3.setType("int");
-
-            List<Column> in =new ArrayList<Column>();
-            in.add(in_data);
-            in.add(in_data2);
-            in.add(in_data3);
-
-            table.Columns = in;
-
-            List topics = new ArrayList<String>();
-            topics.add("rawdata");
-            kafkaConfiguration.Topics =topics;
-
-            List servers = new ArrayList<String>();
-            servers.add("192.168.1.130:29092");
-            kafkaConfiguration.BootstrapServers=servers;
-            kafkaConfiguration.Startup = StartupMode.EARLIEST;
-            kafkaConfiguration.GroupId = "wqe12w12w";
 
             input.put("table",table);
             input.put("kafkaconfiguration",kafkaConfiguration);
