@@ -3,7 +3,6 @@ package com.machdatum.thingmanage;
 import com.squareup.javapoet.ClassName;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import org.apache.flink.streaming.connectors.kafka.config.StartupMode;
 import org.apache.maven.shared.invoker.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -30,7 +29,7 @@ public class App
 
     public static void main( String[] args ) throws MavenInvocationException {
 //        GenerateMaven();
-        initialization (); // Table and kafka configs as arguments
+        KafkaInitilization(); // Table and kafka configs as arguments
         try{
             UpdatePOM();
 
@@ -74,40 +73,24 @@ public class App
         return  document;
     }
 
-    private static void initialization(Table table,KafkaConfiguration kafkaConfiguration){
-        // Configuration
+    private static String KafkaInitilization(Table table, KafkaConfiguration kafkaConfiguration){
         Writer file = null;
         Configuration cfg = new Configuration();
 
         try {
-
-            // Set Directory for templates
-            cfg.setDirectoryForTemplateLoading(new File("templates"));
-
-            // load template
-            Template template = cfg.getTemplate("helloworld.ftl");
-
-
-            // data-model
+            cfg.setDirectoryForTemplateLoading(new File("templates")); //change absolute path
+            Template template = cfg.getTemplate("KafkaSourceConfigurationTemplate.ftl");
             Map<String, Object> input = new HashMap<String, Object>();
-
 
             input.put("table",table);
             input.put("kafkaconfiguration",kafkaConfiguration);
 
-            // File output
-            file = new FileWriter(new File("output.txt"));
-            template.process(input, file);
-            file.flush();
-
-            // Also write output to console
             Writer out = new OutputStreamWriter(System.out);
             template.process(input, out);
             out.flush();
-
+            return out.toString();
         } catch (Exception e) {
             System.out.println(e.getMessage());
-
         } finally {
             if (file != null) {
                 try {
@@ -116,7 +99,9 @@ public class App
                 }
             }
         }
+        return null;
     }
+
     private  static  void GenerateMaven() throws MavenInvocationException {
         InvocationRequest request = new DefaultInvocationRequest();
         request.setGoals(Collections.singletonList("archetype:generate"));
