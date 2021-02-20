@@ -24,8 +24,8 @@ public class SourceGenerator {
     private static ClassName tableName = ClassName.get("org.apache.flink.table.api", "Table");
     private static ClassName envName = ClassName.get("org.apache.flink.streaming.api.environment", "StreamExecutionEnvironment");
     private static ClassName envSettingsName = ClassName.get("org.apache.flink.table.api", "EnvironmentSettings");
-    private static ClassName tableEnvName = ClassName.get("org.apache.flink.table.bridge.java", "StreamTableEnvironment");
-
+    private static ClassName tableEnvName = ClassName.get("org.apache.flink.table.api.bridge.java", "StreamTableEnvironment");
+    private static ClassName tumbleName = ClassName.get("org.apache.flink.table.api", "Tumble");
 
     private  static  final MethodSpec GenerateFilter(String name, String filter){
         return MethodSpec.methodBuilder(name)
@@ -57,8 +57,8 @@ public class SourceGenerator {
                 .returns(tableName)
                 .addParameter(tableEnvName, "tEnv")
                 .addParameter(tableName, "source")
-                .addStatement("$T table = $L.window(Tumble.over($S).on($S).as($S))" +
-                        ".groupBy($S).select($S)", tableName, "source", window.Over, window.On, window.As, window.GroupBy, String.join(",", window.Select))
+                .addStatement("$T table = $L.window($T.over($S).on($S).as($S))" +
+                        ".groupBy($S).select($S)", tableName, "source", tumbleName, window.Over, window.On, window.As, window.GroupBy, String.join(",", window.Select))
                 .addStatement("$L.registerTable($S, $L)", "tEnv", name, "table")
                 .addStatement("return table")
                 .build();
