@@ -4,6 +4,13 @@ public class Column{
     public String Source;
     public String Type;
     public String As;
+
+    public  Column(String source, String type, String as){
+        Source = source;
+        Type = type;
+        As = as;
+    }
+
     public String getSource(){
         return this.Source;
     }

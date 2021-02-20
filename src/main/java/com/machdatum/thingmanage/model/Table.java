@@ -9,6 +9,11 @@ public class Table {
     public String Name;
     public List<Column> Columns;
 
+    public  Table(String name, List<Column> columns){
+        Name = name;
+        Columns = columns;
+    }
+
     public void setName(String Name){
         this.Name =Name;
         //    return null;
@@ -16,18 +21,12 @@ public class Table {
     public String getName(){
         return this.Name;
     }
-    public void setColumns(List<Column> column){
-        /*column.forEach( temp_column ->{
-        Column target = new Column();
-        target.setSource(temp_column.getSource());
-        target.setType(temp_column.getType());
-        target.setAs(temp_column.getAs());
-        Columns.add(target);
-        });*/
-        Columns = column;
-        //return null;
+    public void setColumns(List<Column> columns){
+        Columns = columns;
     }
     public List<Column> getColumns(){
         return this.Columns;
     }
+
+
 }

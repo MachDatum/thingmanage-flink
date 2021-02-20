@@ -9,6 +9,14 @@ public class KafkaConfiguration {
     public String GroupId;
     public List<String> Topics;
     public StartupMode Startup;
+
+    public KafkaConfiguration(List<String> bootstrapServers, String groupId, List<String> topics, StartupMode startup) {
+        BootstrapServers = bootstrapServers;
+        GroupId = groupId;
+        Topics = topics;
+        Startup = startup;
+    }
+
     public void setBootstrapServers(List Servers){
         this.BootstrapServers = Servers;
     }

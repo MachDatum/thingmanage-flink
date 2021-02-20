@@ -5,12 +5,22 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 
 import javax.lang.model.element.Modifier;
+import java.io.File;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public  class SourceGenerator {
+import static freemarker.template.Configuration.DEFAULT_INCOMPATIBLE_IMPROVEMENTS;
+
+public class SourceGenerator {
     private static ClassName tableName = ClassName.get("org.apache.flink.table.api", "Table");
     private static ClassName envName = ClassName.get("org.apache.flink.streaming.api.environment", "StreamExecutionEnvironment");
     private static ClassName envSettingsName = ClassName.get("org.apache.flink.table.api", "EnvironmentSettings");
@@ -67,7 +77,28 @@ public  class SourceGenerator {
                 .build();
     }
 
-    private static  void Generate(FlinkProcess process){
+    private static String KafkaInitilization(Table table, KafkaConfiguration kafkaConfiguration){
+        Configuration cfg = new Configuration(DEFAULT_INCOMPATIBLE_IMPROVEMENTS);
+
+        try {
+            cfg.setDirectoryForTemplateLoading(new File("C:\\Users\\HemanandRamasamy\\IdeaProjects\\QuickStart\\src\\main\\java\\com\\machdatum\\thingmanage\\templates")); //change absolute path
+            Template template = cfg.getTemplate("KafkaSourceConfigurationTemplate.ftl");
+            Map<String, Object> input = new HashMap<String, Object>();
+
+            input.put("table",table);
+            input.put("kafkaconfiguration",kafkaConfiguration);
+
+            StringWriter out = new StringWriter();
+            template.process(input, out);
+            return out.toString();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return null;
+    }
+
+    public static void Generate(FlinkProcess process){
         List<MethodSpec> methods = new ArrayList<>();
 
         for (int i = 0; i < process.Transformations.size(); i++) {
@@ -91,14 +122,17 @@ public  class SourceGenerator {
                 methods.add(method);
             }
         }
-        
+
+        String sourceInitilizer = KafkaInitilization(process.Schema, process.Source);
+
         MethodSpec Main = MethodSpec.methodBuilder("main")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(void.class)
                 .addParameter(String[].class, "args")
                 .addStatement("$T env = $T.getExecutionEnvironment()", envName, envName)
-                .addStatement("$T settings = $.newInstance().inStreamingMode().useBlinkPlanner().build()", envSettingsName, envSettingsName)
+                .addStatement("$T settings = $T.newInstance().inStreamingMode().useBlinkPlanner().build()", envSettingsName, envSettingsName)
                 .addStatement("$T tEnv = $T.create(env,settings)", tableEnvName, tableEnvName)
+                .addStatement(sourceInitilizer)
                 .build();
 
         TypeSpec MainClass = TypeSpec.classBuilder("MainJob")

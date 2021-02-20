@@ -3,6 +3,7 @@ package com.machdatum.thingmanage;
 import com.squareup.javapoet.ClassName;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
+import org.apache.flink.streaming.connectors.kafka.config.StartupMode;
 import org.apache.maven.shared.invoker.*;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -14,11 +15,13 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class App 
@@ -27,11 +30,37 @@ public class App
     private static ClassName envName = ClassName.get("org.apache.flink.table.bridge.java", "StreamTableEnvironment");
     private static String Directory = "C:\\Users\\HemanandRamasamy\\Documents\\Generated";
 
-    public static void main( String[] args ) throws MavenInvocationException {
-//        GenerateMaven();
-        KafkaInitilization(); // Table and kafka configs as arguments
+    public static void main( String[] args ) {
+        KafkaConfiguration source = new KafkaConfiguration(
+                Arrays.asList("192.168.1.130:29092"),
+                "testGroup",
+                Arrays.asList("rawdata"),
+                StartupMode.EARLIEST
+        );
+
+        List<Column> columns = Arrays.asList(
+                new Column("Cnt", "INT", "Cnt"),
+                new Column("Ts", "TIMESTAMP(3) METADATA FROM 'timestamp'", "Ts"),
+                new Column("Device", "INT", "Device")
+        );
+        Table table = new Table("source", columns);
+        List<Object> transformations = Arrays.asList(
+            new TumblingWindow(
+                    "Window1",
+                    "1.minute",
+                    "Ts",
+                    "w",
+                    Arrays.asList("w", "Device"),
+                    Arrays.asList("Device", "w.start AS wStart", "w.end AS wEnd", "(MAX(Cnt) - MIN(Cnt)) AS Cnt" ))
+        );
+
+        FlinkProcess process = new FlinkProcess(source, table, transformations, null);
+
+        SourceGenerator generator = new SourceGenerator();
+        generator.Generate(process);
+
         try{
-            UpdatePOM();
+//            UpdatePOM();
 
             InvocationRequest request = new DefaultInvocationRequest();
             request.setGoals(Collections.singletonList("package"));
@@ -49,7 +78,6 @@ public class App
         catch (Exception ex){
 
         }
-
     }
 
     private static Document AddDependency(Document document, String groupId, String artifactId, String version){
@@ -71,35 +99,6 @@ public class App
         dependencies.appendChild(dependency);
 
         return  document;
-    }
-
-    private static String KafkaInitilization(Table table, KafkaConfiguration kafkaConfiguration){
-        Writer file = null;
-        Configuration cfg = new Configuration();
-
-        try {
-            cfg.setDirectoryForTemplateLoading(new File("templates")); //change absolute path
-            Template template = cfg.getTemplate("KafkaSourceConfigurationTemplate.ftl");
-            Map<String, Object> input = new HashMap<String, Object>();
-
-            input.put("table",table);
-            input.put("kafkaconfiguration",kafkaConfiguration);
-
-            Writer out = new OutputStreamWriter(System.out);
-            template.process(input, out);
-            out.flush();
-            return out.toString();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        } finally {
-            if (file != null) {
-                try {
-                    file.close();
-                } catch (Exception e2) {
-                }
-            }
-        }
-        return null;
     }
 
     private  static  void GenerateMaven() throws MavenInvocationException {
