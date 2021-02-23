@@ -98,7 +98,7 @@ public class SourceGenerator {
         return null;
     }
 
-    public static void Generate(FlinkProcess process){
+    public static String Generate(FlinkProcess process){
         List<MethodSpec> methods = new ArrayList<>();
 
         for (int i = 0; i < process.Transformations.size(); i++) {
@@ -144,5 +144,7 @@ public class SourceGenerator {
         JavaFile file = JavaFile.builder("com.machdatum.thingmanage", MainClass)
                 .build();
         System.out.println(file.toString());
+
+        return  file.toString();
     }
 }

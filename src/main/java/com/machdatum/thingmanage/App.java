@@ -57,10 +57,16 @@ public class App
         FlinkProcess process = new FlinkProcess(source, table, transformations, null);
 
         SourceGenerator generator = new SourceGenerator();
-        generator.Generate(process);
+        String sourceCode = generator.Generate(process);
+
 
         try{
-//            UpdatePOM();
+            GenerateMaven();
+            UpdatePOM();
+
+            FileWriter  file = new FileWriter ("C:\\Users\\HemanandRamasamy\\Documents\\Generated\\flink-process\\src\\main\\java\\com\\machdatum\\thingmanage\\MainJob.java");
+            file.write(sourceCode);
+            file.close();
 
             InvocationRequest request = new DefaultInvocationRequest();
             request.setGoals(Collections.singletonList("package"));
@@ -146,7 +152,7 @@ public class App
 
             NodeList list = document.getElementsByTagName("mainClass");
             Element mainClass = (Element) list.item(0);
-            mainClass.setTextContent("com.machdatum.thingmanage.Main");
+            mainClass.setTextContent("com.machdatum.thingmanage.MainJob");
 
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer();
@@ -159,5 +165,4 @@ public class App
         }
 
     }
-
 }
