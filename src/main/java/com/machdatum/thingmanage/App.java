@@ -1,8 +1,6 @@
 package com.machdatum.thingmanage;
 
 import com.squareup.javapoet.ClassName;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 import org.apache.flink.streaming.connectors.kafka.config.StartupMode;
 import org.apache.maven.shared.invoker.*;
 import org.w3c.dom.Document;
@@ -15,20 +13,19 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import java.io.File;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class App 
 {
     private static ClassName tableName = ClassName.get("org.apache.flink.table.api", "Table");
     private static ClassName envName = ClassName.get("org.apache.flink.table.bridge.java", "StreamTableEnvironment");
-    private static String Directory = "C:\\Users\\HemanandRamasamy\\Documents\\Generated";
+    private static String Directory = "/home/aurora/Documents/generated";
 
     public static void main( String[] args ) {
         KafkaConfiguration source = new KafkaConfiguration(
@@ -51,6 +48,7 @@ public class App
                     "Ts",
                     "w",
                     Arrays.asList("w", "Device"),
+//                    Arrays.asList(new Field("Device",null,null),new Field("w","wStart","start"),new Field("w","wEnd","end()")))
                     Arrays.asList("Device", "w.start AS wStart", "w.end AS wEnd", "(MAX(Cnt) - MIN(Cnt)) AS Cnt" ))
         );
 
@@ -59,19 +57,14 @@ public class App
         SourceGenerator generator = new SourceGenerator();
         String sourceCode = generator.Generate(process);
 
-
         try{
             GenerateMaven();
             UpdatePOM();
 
-            FileWriter  file = new FileWriter ("C:\\Users\\HemanandRamasamy\\Documents\\Generated\\flink-process\\src\\main\\java\\com\\machdatum\\thingmanage\\MainJob.java");
-            file.write(sourceCode);
-            file.close();
-
             InvocationRequest request = new DefaultInvocationRequest();
             request.setGoals(Collections.singletonList("package"));
             Invoker invoker = new DefaultInvoker();
-            invoker.setMavenHome(new File("C:\\Program Files\\Java\\apache-maven-3.6.3"));
+            invoker.setMavenHome(new File("/home/aurora/.m2/wrapper/dists/apache-maven-3.6.0-bin/2dakv70gp803gtm5ve1ufmvttn/apache-maven-3.6.0/"));
             invoker.setWorkingDirectory(new File(Directory + "\\flink-process"));
             invoker.setOutputHandler(new InvocationOutputHandler() {
                 @Override
@@ -80,6 +73,15 @@ public class App
                 }
             });
             InvocationResult result = invoker.execute( request );
+
+            File tempDirectory = new File("/home/aurora/Documents/generated/flink-process/src/main/java/com/machdatum/thingmanage/");
+            File fileWithAbsolutePath = new File(tempDirectory, "MainJob.java");
+            if(!fileWithAbsolutePath.exists()){
+                fileWithAbsolutePath.createNewFile();
+            }
+            FileWriter  file = new FileWriter (fileWithAbsolutePath);
+            file.write(sourceCode);
+            file.close();
         }
         catch (Exception ex){
 
@@ -122,7 +124,7 @@ public class App
         request.setProperties(properties);
 
         Invoker invoker = new DefaultInvoker();
-        invoker.setMavenHome(new File("C:\\Program Files\\Java\\apache-maven-3.6.3"));
+        invoker.setMavenHome(new File("/home/aurora/.m2/wrapper/dists/apache-maven-3.6.0-bin/2dakv70gp803gtm5ve1ufmvttn/apache-maven-3.6.0/"));
         invoker.setWorkingDirectory(new File(Directory));
         invoker.setOutputHandler(new InvocationOutputHandler() {
             @Override
@@ -139,7 +141,7 @@ public class App
     }
 
     private static  void UpdatePOM() throws ParserConfigurationException, IOException, SAXException {
-        File pom = new File(Directory + "\\flink-process\\pom.xml");
+        File pom = new File(Directory + "/flink-process/pom.xml");
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         Document document = builder.parse(pom);
@@ -149,6 +151,8 @@ public class App
 
             document = AddDependency(document, "org.apache.flink", "flink-connector-kafka_${scala.binary.version}", "${flink.version}");
             document = AddDependency(document, "org.apache.flink", "flink-table-api-java-bridge_${scala.binary.version}", "${flink.version}");
+            document = AddDependency(document, "org.apache.flink", "flink-json","${flink.version}");
+            document = AddDependency(document, "org.apache.flink", "flink-connector-elasticsearch7_${scala.binary.version}","${flink.version}");
 
             NodeList list = document.getElementsByTagName("mainClass");
             Element mainClass = (Element) list.item(0);
@@ -158,7 +162,7 @@ public class App
             Transformer transformer = transformerFactory.newTransformer();
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
             DOMSource source = new DOMSource(document);
-            StreamResult file = new StreamResult(new File(Directory + "\\flink-process\\pom.xml"));
+            StreamResult file = new StreamResult(new File(Directory + "/flink-process/pom.xml"));
             transformer.transform(source, file);
         }catch (Exception ex){
             System.out.println(ex);
