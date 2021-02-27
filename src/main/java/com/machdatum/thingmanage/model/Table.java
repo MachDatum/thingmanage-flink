@@ -16,7 +16,6 @@ public class Table {
 
     public void setName(String Name){
         this.Name =Name;
-        //    return null;
     }
     public String getName(){
         return this.Name;

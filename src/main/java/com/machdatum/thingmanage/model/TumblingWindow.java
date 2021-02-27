@@ -9,7 +9,6 @@ public class TumblingWindow {
     public String As;
     public List<String> GroupBy;
     public List<String> Select;
-    public List<Field> Fields;
 
     public TumblingWindow(String name, String over, String on, String as, List<String> groupBy, List<String> select){
         Name = name;

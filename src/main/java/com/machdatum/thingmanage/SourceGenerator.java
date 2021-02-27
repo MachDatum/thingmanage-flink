@@ -7,7 +7,6 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import org.apache.flink.table.api.TableColumn;
 import org.apache.flink.table.api.TableSchema;
 
 import javax.lang.model.element.Modifier;
@@ -71,30 +70,6 @@ public class SourceGenerator {
                 .build();
     }
 
-    public static String GenerateFields(List<Field> fields){
-        StringBuilder out = new StringBuilder("");
-        for(Field field : fields){
-            out.append("$(\""+ field.Source + "\")");
-            if(field.Func != null){
-                out.append("."+ field.Func + "");
-            }
-            if(field.Func != null){
-                out.append(".as(\""+ field.As+"\")");
-            }
-            out.append(",");
-        }
-        String out_ = out.toString();
-        return out_.substring(0, out_.length() -1);
-    }
-
-    public static String GenerateGroupBy(List<String> fields){
-        StringBuilder out = new StringBuilder("");
-        for(String field : fields){
-            out.append("$(\""+ field + "\"),");
-        }
-        String out_ = out.toString();
-        return out_.substring(0, out_.length() -1);
-    }
 
     private  static  final MethodSpec GenerateSliding(String name, SlidingWindow window){
         return MethodSpec.methodBuilder(name)
@@ -103,7 +78,8 @@ public class SourceGenerator {
                 .addParameter(tableEnvName, "tEnv")
                 .addParameter(tableName, "source")
                 .addStatement("$T table = $L.window(Tumble.over($S).every($S).on($S).as($S))" +
-                        ".groupBy($S).select($S)", tableName, "source", window.Over,  window.Every, window.On, window.As, window.GroupBy, GenerateFields(window.Fields))
+                        ".groupBy($S).select($S)", tableName, "source", window.Over,  window.Every, window.On,
+                        window.As, String.join(",", window.GroupBy), String.join(",", window.Select))
                 .addStatement("$L.registerTable($S, $L)", "tEnv", name, "table")
                 .addStatement("return table")
                 .build();
@@ -128,19 +104,6 @@ public class SourceGenerator {
         }
 
         return null;
-    }
-
-    public static String GetSchema(TableSchema schema){
-        StringBuilder fields = new StringBuilder("");
-        List<TableColumn> columns = schema.getTableColumns();
-        for (TableColumn column : columns){
-            fields.append(column.getName()+ " ");
-            fields.append(column.getType());
-            fields.append(",");
-        }
-
-        String out = fields.toString().replace("*ROWTIME*", "");;
-        return out.substring(0, out.length() -1);
     }
 
     public static String ElasticSink(String TableName){
@@ -241,7 +204,6 @@ public class SourceGenerator {
 
         JavaFile file = JavaFile.builder("com.machdatum.thingmanage", MainClass)
                 .build();
-        System.out.println(file.toString());
 
         return  file.toString();
     }
