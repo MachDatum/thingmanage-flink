@@ -100,29 +100,7 @@ public class App
         attr.setNodeValue(implementation);
         transformer.setAttributeNode(attr);
 
-        //  transformers.appendChild(document.createTextNode("<"+implementation+">"));
         transformers.appendChild(transformer);
-
-        return  document;
-    }
-
-
-    private static  Document AddTransformer1(Document document){
-        //TODO : Be spcific in selecting tree node
-        NodeList list = document.getElementsByTagName("transformers");
-        Element transformers = (Element) list.item(0);
-
-        Element e = document.createElementNS("a","b");
-        Attr a = document.createAttributeNS("c","d");
-//        Element implementation = document.createElement("implementation");
-//        implementation.appendChild((document.createTextNode("org.apache.maven.plugins.shade.resources.ServiceResourceTransformer")));
-
-        Element transformer = document.createElement("transformer");
-        transformer.appendChild(e);
-        transformer.appendChild(a);
-
-        transformers.appendChild(transformer);
-
         return  document;
     }
 
