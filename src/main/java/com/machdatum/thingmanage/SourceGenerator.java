@@ -53,13 +53,11 @@ public class SourceGenerator {
     }
 
     private  static  final MethodSpec GenerateTumble(String name, TumblingWindow window){
-//        String identifiers = window.Select == null ? GenerateFields(window.Fields) :  String.join(",", window.Select);
         return MethodSpec.methodBuilder(name)
                 .addModifiers(Modifier.PRIVATE, Modifier.FINAL, Modifier.STATIC)
                 .returns(tableName)
                 .addParameter(tableEnvName, "tEnv")
                 .addParameter(tableName, "source")
-//                .addStatement("$T table = $L.window($T.over(lit($S).minutes()).on($S).as($S)" +
                 .addStatement("$T table = $L.window($T.over($S).on($S).as($S))" +
                         ".groupBy($S)" +
                         ".select($S)",

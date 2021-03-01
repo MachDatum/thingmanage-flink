@@ -3,6 +3,7 @@ package com.machdatum.thingmanage;
 import com.squareup.javapoet.ClassName;
 import org.apache.flink.streaming.connectors.kafka.config.StartupMode;
 import org.apache.maven.shared.invoker.*;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -32,13 +33,15 @@ public class App
                 Arrays.asList("192.168.1.130:29092"),
                 "testGroup",
                 Arrays.asList("rawdata"),
-                StartupMode.EARLIEST
+                StartupMode.SPECIFIC_OFFSETS
         );
 
         List<Column> columns = Arrays.asList(
                 new Column("Cnt", "INT", "Cnt"),
-                new Column("Ts", "TIMESTAMP(3) METADATA FROM 'timestamp'", "Ts"),
-                new Column("Device", "INT", "Device")
+//                new Column("Ts", "TIMESTAMP(3) METADATA FROM 'timestamp'", "Ts"),
+                new Column("Device", "INT", "Device"),
+                new Watermark("Ts", "TIMESTAMP(3) METADATA FROM 'timestamp'", "Ts", 5, TimeUnit.SECOND)
+
         );
         Table table = new Table("source", columns);
         List<Object> transformations = Arrays.asList(
@@ -86,6 +89,41 @@ public class App
         catch (Exception ex){
 
         }
+    }
+
+    private static Document AddTransformer(Document document, String implementation){
+        NodeList list = document.getElementsByTagName("transformers");
+        Element transformers = (Element) list.item(0);
+
+        Element transformer = document.createElement("transformer");
+        Attr attr = document.createAttribute("implementation");
+        attr.setNodeValue(implementation);
+        transformer.setAttributeNode(attr);
+
+        //  transformers.appendChild(document.createTextNode("<"+implementation+">"));
+        transformers.appendChild(transformer);
+
+        return  document;
+    }
+
+
+    private static  Document AddTransformer1(Document document){
+        //TODO : Be spcific in selecting tree node
+        NodeList list = document.getElementsByTagName("transformers");
+        Element transformers = (Element) list.item(0);
+
+        Element e = document.createElementNS("a","b");
+        Attr a = document.createAttributeNS("c","d");
+//        Element implementation = document.createElement("implementation");
+//        implementation.appendChild((document.createTextNode("org.apache.maven.plugins.shade.resources.ServiceResourceTransformer")));
+
+        Element transformer = document.createElement("transformer");
+        transformer.appendChild(e);
+        transformer.appendChild(a);
+
+        transformers.appendChild(transformer);
+
+        return  document;
     }
 
     private static Document AddDependency(Document document, String groupId, String artifactId, String version){
@@ -153,6 +191,7 @@ public class App
             document = AddDependency(document, "org.apache.flink", "flink-table-api-java-bridge_${scala.binary.version}", "${flink.version}");
             document = AddDependency(document, "org.apache.flink", "flink-json","${flink.version}");
             document = AddDependency(document, "org.apache.flink", "flink-connector-elasticsearch7_${scala.binary.version}","${flink.version}");
+            document = AddTransformer(document, "org.apache.maven.plugins.shade.resource.ServicesResourceTransformer");
 
             NodeList list = document.getElementsByTagName("mainClass");
             Element mainClass = (Element) list.item(0);
