@@ -28,7 +28,7 @@ public class App
     private static ClassName envName = ClassName.get("org.apache.flink.table.bridge.java", "StreamTableEnvironment");
     private static String Directory = "/home/aurora/Documents/generated";
 
-    public static void main( String[] args ) {
+    public static void main( String[] args ) throws MavenInvocationException, ParserConfigurationException, SAXException, IOException {
         KafkaConfiguration source = new KafkaConfiguration(
                 Arrays.asList("192.168.1.130:29092"),
                 "testGroup",
@@ -64,20 +64,7 @@ public class App
             GenerateMaven();
             UpdatePOM();
 
-            InvocationRequest request = new DefaultInvocationRequest();
-            request.setGoals(Collections.singletonList("package"));
-            Invoker invoker = new DefaultInvoker();
-            invoker.setMavenHome(new File("/home/aurora/.m2/wrapper/dists/apache-maven-3.6.0-bin/2dakv70gp803gtm5ve1ufmvttn/apache-maven-3.6.0/"));
-            invoker.setWorkingDirectory(new File(Directory + "\\flink-process"));
-            invoker.setOutputHandler(new InvocationOutputHandler() {
-                @Override
-                public void consumeLine(String s) throws IOException {
-                    System.out.println(s);
-                }
-            });
-            InvocationResult result = invoker.execute( request );
-
-            File tempDirectory = new File("/home/aurora/Documents/generated/flink-process/src/main/java/com/machdatum/thingmanage/");
+            File tempDirectory = new File(Directory + "/flink-process/src/main/java/com/machdatum/thingmanage/");
             File fileWithAbsolutePath = new File(tempDirectory, "MainJob.java");
             if(!fileWithAbsolutePath.exists()){
                 fileWithAbsolutePath.createNewFile();
@@ -85,9 +72,22 @@ public class App
             FileWriter  file = new FileWriter (fileWithAbsolutePath);
             file.write(sourceCode);
             file.close();
+
+            InvocationRequest request = new DefaultInvocationRequest();
+            request.setGoals(Collections.singletonList("package"));
+            Invoker invoker = new DefaultInvoker();
+            invoker.setMavenHome(new File("/home/aurora/.m2/wrapper/dists/apache-maven-3.6.0-bin/2dakv70gp803gtm5ve1ufmvttn/apache-maven-3.6.0/"));
+            invoker.setWorkingDirectory(new File(Directory + "/flink-process"));
+            invoker.setOutputHandler(new InvocationOutputHandler() {
+                @Override
+                public void consumeLine(String s) throws IOException {
+                    System.out.println(s);
+                }
+            });
+            InvocationResult result = invoker.execute( request );
         }
         catch (Exception ex){
-
+            throw ex;
         }
     }
 
